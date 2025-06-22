@@ -169,17 +169,6 @@
       { name: 'Grape',          img: 'grape.png' }
     ];
 
-    function renderLogs() {
-      const logsContainer = document.getElementById('logs');
-      const stored = JSON.parse(localStorage.getItem('generationLogs')) || [];
-      if (!stored.length) {
-        logsContainer.innerHTML = '<h3>Generation Logs</h3><p>No entries yet.</p>';
-        return;
-      }
-      const entries = stored.map(e => `<p>[${e.timestamp}] ${e.user} (${e.password}) → ${e.choice}</p>`).join('');
-      logsContainer.innerHTML = `<h3>Generation Logs</h3>${entries}`;
-    }
-
     async function logEvent(user, choice, password) {
       const timestamp = new Date().toISOString();
       const entry = { user, password, choice: choice.name, timestamp };
